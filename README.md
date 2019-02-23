@@ -1,2 +1,1 @@
-# MAV
-micro aerial vehicle
+
