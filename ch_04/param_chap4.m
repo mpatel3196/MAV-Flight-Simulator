@@ -1,26 +1,26 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Params for Aersonade UAV
 %physical parameters of airframe
+P.gravity = 9.81;
 P.mass = 13.5;
 P.Jx   = 0.8244;
 P.Jy   = 1.135;
 P.Jz   = 1.759;
 P.Jxz  = .1204;
 
-% initial conditions   CH=3
-P.pn0    =  1; % initial North position
-P.pe0    =  1; % initial East position
-P.pd0    =  1; % initial Down position (negative altitude)
-P.u0     =  10; % initial velocity along body x-axis
+% initial conditions
+P.pn0    =  2; % initial North position
+P.pe0    =  2; % initial East position
+P.pd0    =  2; % initial Down position (negative altitude)
+P.u0     =  5; % initial velocity along body x-axis
 P.v0     =  0; % initial velocity along body y-axis
 P.w0     =  0; % initial velocity along body z-axis
 P.phi0   =  0; % initial roll angle
-P.theta0 =  1; % initial pitch angle
+P.theta0 =  0; % initial pitch angle
 P.psi0   =  0; % initial yaw angle
 P.p0     =  0; % initial body frame roll rate
 P.q0     =  0; % initial body frame pitch rate
 P.r0     =  0; % initial body frame yaw rate
-
 
 % aerodynamic coefficients
 P.S_wing        = 0.55;
@@ -69,19 +69,21 @@ P.M             = 50;
 P.epsilon       = 0.1592;
 P.alpha0        = 0.4712;
 
-% PARTH - Wind data for steady wind
-P.w_ns = 5;
-P.w_es = 2;
-P.w_ds = 1;
 
-% PARTH - Dryden gust model parmeters
-% For low altitude, light turbulence
-P.Va0       = 3;
-P.sigma_u   = 1.06;
-P.L_u       = 200;
-P.sigma_v   = 1.06;
-P.L_v       = 200;
-P.sigma_w   = 50;
-P.L_w       = 0.7;
-P.Ts        = 10;
+% Steady wind
+P.w_ns = 2;
+P.w_es = 0;
+P.w_ds = 0;
+
+% Dryden gust model parameter
+% for low altitude, light turbulence
+P.Va0 = 10;
+P.sigma_u = 1.06;
+P.L_u = 200;
+P.sigma_v = 1.06;
+P.L_v = 200;
+P.sigma_w = 50;
+P.L_w = 0.7;
+P.Ts = 10;
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
