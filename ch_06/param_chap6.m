@@ -1,27 +1,24 @@
-%%%%%%%
-P.gravity = 9.8;
+P.gravity = 9.81;
    
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Params for Aersonade UAV
 %physical parameters of airframe
-P.mass = 1.56;
-P.Jx   = 0.1147;
-P.Jy   = 0.0576;
-P.Jz   = 0.1712;
-P.Jxz  = 0.0015;
-
+P.mass = 25;%13.5;
+P.Jx   = 0.8244;
+P.Jy   = 1.135;
+P.Jz   = 1.759;
+P.Jxz  = .1204;
 % aerodynamic coefficients
-P.M             = 50;
-P.epsilon       = 0.1592;
-P.alpha0        = 0.4712;
+P.S_wing        = 0.55;
+P.b             = 2.8956;
+P.c             = 0.18994;
+P.S_prop        = 0.2027;
 P.rho           = 1.2682;
-P.c             = 0.3302;
-P.b             = 1.4224;
-P.S_wing        = 0.2589;
-P.S_prop        = 0.0314;
-P.k_motor       = 20;
+P.k_motor       = 80;
+%P.k_motor = 15;
 P.k_T_P         = 0;
 P.k_Omega       = 0;
 P.e             = 0.9;
-
 
 P.C_L_0         = 0.28;
 P.C_L_alpha     = 3.45;
@@ -55,68 +52,85 @@ P.C_n_r         = -0.35;
 P.C_n_delta_a   = 0.06;
 P.C_n_delta_r   = -0.032;
 P.C_prop        = 1.0;
-
-
+%     % HACK: prop has too much power for aerosonde
+%     P.C_prop = 0.5;
+P.M             = 50;
+P.epsilon       = 0.1592;
+P.alpha0        = 0.4712;
 
 % wind parameters
-P.wind_n = 0;
-P.wind_e = 0;
+P.wind_n = 0;%3;
+P.wind_e = 0;%2;
 P.wind_d = 0;
-P.L_u = 1250;
-P.L_v = 1750;
-P.L_w = 1750;
-P.sigma_u = 1; 
-P.sigma_v = 1;
-P.sigma_w = 0.7;
-% P.sigma_wx = 0; 
-% P.sigma_wy = 0;
-% P.sigma_wz = 0;
-P.Va0 = 35;
+P.L_u = 200;
+P.L_v = 200;
+P.L_w = 50;
+P.sigma_u = 1.06; 
+P.sigma_v = 1.06;
+P.sigma_w = .7;
+
+
+% compute trim conditions using 'mavsim_chap5_trim.slx'
+% initial airspeed
+P.Va0 = 35;        % m/s (~85 mph)
+gamma = 30*pi/180;  % desired flight path angle (radians)
+R     = Inf;       % desired radius (m) - use (+) for right handed orbit, 
+h0    = 0;  % initial altitude
 
 % autopilot sample rate
 P.Ts = 0.01;
 
-% compute trim conditions using 'mavsim_chap5_trim.mdl'
-P.Va    = 35;         % desired airspeed (m/s)
-gamma = 5*pi/180;  % desired flight path angle (radians)
-R     = 0;         % desired radius (m) - use (+) for right handed orbit, 
-                    %                          (-) for left handed orbit
 % first cut at initial conditions
 P.pn0    = 0;  % initial North position
 P.pe0    = 0;  % initial East position
-P.pd0    = -100;  % initial Down position (negative altitude)
-P.u0     = P.Va; % initial velocity along body x-axis
+P.pd0    = 0;  % initial Down position (negative altitude)
+P.u0     = P.Va0; % initial velocity along body x-axis
 P.v0     = 0;  % initial velocity along body y-axis
 P.w0     = 0;  % initial velocity along body z-axis
 P.phi0   = 0;  % initial roll angle
 P.theta0 = 0;  % initial pitch angle
-P.psi0   = 0*pi/180;  % initial heading angle
+P.psi0   = 0;  % initial yaw angle
 P.p0     = 0;  % initial body frame roll rate
 P.q0     = 0;  % initial body frame pitch rate
 P.r0     = 0;  % initial body frame yaw rate
+%                          (-) for left handed orbit
 
 % run trim commands
-[x_trim, u_trim]=compute_trim('mavsim_trim',P.Va,gamma,R);
+[x_trim, u_trim]=compute_trim('mavsim_trim',P.Va0,gamma,R);
 P.u_trim = u_trim;
 P.x_trim = x_trim;
 
 % set initial conditions to trim conditions
 % initial conditions
+P.pn0    = 0;  % initial North position
+P.pe0    = 0;  % initial East position
+P.pd0    = -h0;  % initial Down position (negative altitude)
 P.u0     = x_trim(4);  % initial velocity along body x-axis
 P.v0     = x_trim(5);  % initial velocity along body y-axis
 P.w0     = x_trim(6);  % initial velocity along body z-axis
 P.phi0   = x_trim(7);  % initial roll angle
 P.theta0 = x_trim(8);  % initial pitch angle
+P.psi0   = x_trim(9);  % initial yaw angle
 P.p0     = x_trim(10);  % initial body frame roll rate
 P.q0     = x_trim(11);  % initial body frame pitch rate
 P.r0     = x_trim(12);  % initial body frame yaw rate
 
 % compute different transfer functions
 [T_phi_delta_a,T_chi_phi,T_theta_delta_e,T_h_theta,T_h_Va,T_Va_delta_t,T_Va_theta,T_v_delta_r]...
-   = compute_tf_model(x_trim,u_trim,P);
+    = compute_tf_model(x_trim,u_trim,P);
 
 % linearize the equations of motion around trim conditions
 [A_lon, B_lon, A_lat, B_lat] = compute_ss_model('mavsim_trim',x_trim,u_trim);
+
+
+%----------------------------------------------------
+% low level autopilot gains
+P.tau = 5;  % gain on dirty derivative
+P.altitude_take_off_zone = 10;
+P.altitude_hold_zone = 10;
+P.theta_c_max = 30*pi/180; % maximum pitch angle command
+P.climb_out_trottle = 0.61;
+P.phi_max = 45*pi/180;
 
 % select gains for roll loop
     % get transfer function data for delta_a to phi
@@ -125,27 +139,23 @@ P.r0     = x_trim(12);  % initial body frame yaw rate
     a_phi1 = den(2);
     % maximum possible aileron command
     delta_a_max = 45*pi/180;
-    % Roll command when delta_a_max is achieved
-    phi_max = 15*pi/180;
-    % pick natural frequency to achieve delta_a_max for step of phi_max
-    zeta_roll = 0.7;
-    %wn_roll = sqrt(a_phi2*delta_a_max/phi_max);
-    wn_roll = sqrt(a_phi2*delta_a_max*sqrt(1-zeta_roll^2)/phi_max);
+    % Maximum anticipated roll error
+    phi_max = 20*pi/180;
+    % pick damping ratio for roll loop
+    zeta_roll = 2;
     
-    % set control gains based on zeta and wn
-    P.roll_kp = wn_roll^2/a_phi2;
-    P.roll_kd = 1.1*(2*zeta_roll*wn_roll - a_phi1)/a_phi2;
-    P.roll_ki = 0.1;
-    
-    % add extra roll damping
-    P.roll_kd = P.roll_kd+1;
-    
+    % set roll control gains based on zeta and phi_max
+    P.roll_kp = delta_a_max/phi_max;
+    wn_roll = sqrt(P.roll_kp*a_phi2);
+    P.roll_kd = (2*zeta_roll*wn_roll - a_phi1)/a_phi2;
+    %P.roll_kd = P.roll_kd+.2; % add extra roll damping
+    P.roll_ki = 0;
     
 % select gains for course loop
-   zeta_course = 0.8;
-   wn_course = wn_roll/30;
-   P.course_kp = 2*zeta_course*wn_course*P.Va/P.gravity;
-   P.course_ki = wn_course^2*P.Va/P.gravity;
+   zeta_course = 0.9;
+   wn_course = wn_roll/8;
+   P.course_kp = 2*zeta_course*wn_course*P.Va0/P.gravity;
+   P.course_ki = wn_course^2*P.Va0/P.gravity;
    P.course_kd = 0;
    
 % select gains for sideslip hold
@@ -174,61 +184,53 @@ P.r0     = x_trim(12);  % initial body frame yaw rate
    % maximum possible elevator command
    delta_e_max = 45*pi/180;
    % Pitch command when delta_e_max is achieved
-   theta_max = 15*pi/180;
+   theta_max = 10*pi/180;
    % pick natural frequency to achieve delta_e_max for step of theta_max
    zeta_pitch = 0.9;
-   wn_pitch = sqrt(abs(a_theta3)*delta_e_max*sqrt(1-zeta_pitch^2)/theta_max);
    % set control gains based on zeta and wn
-   P.pitch_kp = (wn_pitch^2-a_theta2)/a_theta3;
+   P.pitch_kp = -delta_e_max/theta_max;
+   wn_pitch = sqrt(a_theta2+P.pitch_kp*a_theta3);
    P.pitch_kd = (2*zeta_pitch*wn_pitch - a_theta1)/a_theta3;
-   P.pitch_ki = 0;
+   P.pitch_ki = 0.0;
    P.K_theta_DC = P.pitch_kp*a_theta3/(a_theta2+P.pitch_kp*a_theta3);
 
 % select gains for altitude loop
-   zeta_altitude = 0.7;
+   zeta_altitude = .9;%.707;
    wn_altitude = wn_pitch/40;
-   P.altitude_kp = 2*zeta_altitude*wn_altitude/P.K_theta_DC/P.Va;
-   P.altitude_ki = wn_altitude^2/P.K_theta_DC/P.Va;
-   P.altitude_kd = 0;
+   P.altitude_kp = 2*zeta_altitude*wn_altitude/P.K_theta_DC/P.Va0;
+   P.altitude_ki = wn_altitude^2/P.K_theta_DC/P.Va0;
+  P.altitude_kp = 0.0114;
+  P.altitude_ki = 0.0039;
+  P.altitude_kd = 0;%-.001;
  
 % airspeed hold using pitch
    [num,den]=tfdata(T_Va_theta,'v');
    a_V1 = den(2);
-   zeta_airspeed_pitch = 0.707;
+   zeta_airspeed_pitch = 1;%0.707;
    wn_airspeed_pitch = wn_pitch/10;
    P.airspeed_pitch_kp = (a_V1-2*zeta_airspeed_pitch*wn_airspeed_pitch)/P.K_theta_DC/P.gravity;
    P.airspeed_pitch_ki = -wn_airspeed_pitch^2/P.K_theta_DC/P.gravity;
-   P.airspeed_pitch_kd = 0;
  
 % airspeed hold using throttle
    [num,den]=tfdata(T_Va_delta_t,'v');
    a_Vt1 = den(2);
    a_Vt2 = num(2);
-   zeta_airspeed_throttle = 0.707;
+   zeta_airspeed_throttle = 2;%0.707;
 %    wn_airspeed_throttle = 5;   % a value of 5 causes instability...
    wn_airspeed_throttle = 3;
-   P.airspeed_throttle_kp = (2*zeta_airspeed_throttle*wn_airspeed_throttle-a_Vt1)/a_Vt1;
+   P.airspeed_throttle_kp = (2*zeta_airspeed_throttle*wn_airspeed_throttle-a_Vt1)/a_Vt2;
    P.airspeed_throttle_ki = wn_airspeed_throttle^2/a_Vt2;
-   P.airspeed_throttle_kd = 0;
-   P.airspeed_throttle_integrator_gain = a_Vt1/a_Vt2/P.airspeed_throttle_ki;
+%   P.airspeed_throttle_integrator_gain = a_Vt1/a_Vt2/P.airspeed_throttle_ki;
  
 % gains for slideslip
    P.sideslip_kp = .1;
    P.sideslip_kd = -.5;
    P.sideslip_ki = 0;
+ 
 
-% climbrate using pitch
-   P.climbrate_pitch_kp = 1.5;
-   P.climbrate_pitch_ki = 0.5;
-   P.climbrate_pitch_kd = .5;
-   
-   
-% altitude zone
-P.altitude_take_off_zone = 10;
-P.altitude_hold_zone = 30;
 
-% gain on dirty derivative
-P.tau = 5;
+
+
 
 
 

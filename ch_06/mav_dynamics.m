@@ -139,61 +139,45 @@ function sys=mdlDerivatives(t,x,uu, P)
     m     = uu(5);
     n     = uu(6);
     
-    % PARTH == precalculating angles values
-    Ctheta = cos(theta);
-    Stheta = sin(theta);
-    Ttheta = tan(theta);
-    Cpsi   = cos(psi);
-    Spsi   = sin(psi);
-    Cphi   = cos(phi);
-    Sphi   = sin(phi);
+    Gamma  = P.Jx*P.Jz-P.Jxz^2;
+    Gamma1 = (P.Jxz*(P.Jx-P.Jy+P.Jz))/Gamma;
+    Gamma2 = (P.Jz*(P.Jz-P.Jy)+P.Jxz*P.Jxz)/Gamma;
+    Gamma3 = P.Jx/Gamma;
+    Gamma4 = P.Jxz/Gamma;
+    Gamma5 = (P.Jz-P.Jx)/Gamma;
+    Gamma7 = (P.Jx*(P.Jx-P.Jy)+P.Jxz*P.Jxz)/Gamma;
+    Gamma8 = P.Jx/Gamma;
     
-    % PARTH - stroing J Matrix values in this file
-    JJ = [
-        P.Jx;...
-        P.Jy;...
-        P.Jz;...
-        P.Jxz;...
-        ];
-      
-    % PARTH = Gamma values for Inertia Matrix
-    G = JJ(1)*JJ(3) - JJ(4)^2;
-    G1 = (JJ(4)*(JJ(1) -JJ(2)+JJ(3))) / G;
-    G2 = (JJ(3)*(JJ(3)-JJ(2))+(JJ(4)^2)) / G;
-    G3 = JJ(3) / G;
-    G4 = JJ(4) / G;
-    G5 = (JJ(3)-JJ(1)) / JJ(2);
-    G6 = JJ(4) / JJ(2);
-    G7 = ((JJ(1)-JJ(2))*JJ(1) + (JJ(4)^2)) / G;
-    G8 = JJ(1) / G;
+    pndot = cos(theta)*cos(psi)*u... 
+            + (sin(phi)*sin(theta)*cos(psi)-cos(phi)*sin(psi))*v... 
+            + (cos(phi)*sin(theta)*cos(psi)+sin(phi)*sin(psi))*w;
     
-  
-    pndot = u*(Ctheta*Cpsi) + v*(Sphi*Stheta*Cpsi - Cphi*Spsi) + w*(Cphi*Stheta*Cpsi + Sphi*Spsi);
-    pedot = u*(Ctheta*Spsi) + v*(Sphi*Stheta*Spsi + Cphi*Cpsi) + w*(Cphi*Stheta*Spsi - Sphi*Cpsi);
-    pddot = u*(-Stheta) + v*(Sphi*Ctheta) + w*(Cphi*Ctheta);
-    udot = r*v - q*w + (P.mass)*fx;
-    vdot = p*w - r*u + (P.mass)*fy;
-    wdot = q*u - p*v + (P.mass)*fz;
-    phidot = p + q*(Sphi*Ttheta) + r*(Cphi*Ttheta);
-    thetadot = q*(Cphi) + r*(-Sphi);
-    psidot = q*(Sphi/Ctheta) + r*(Cphi/Ctheta);
-    pdot = G1*p*q - G2*q*r + G3*ell + G4*n;
-    qdot = G5*p*r - G6*(p^2 - r^2) + m/(JJ(2));
-    rdot = G7*p*r - G1*q*r + G4*ell + G8*n;
+    pedot = cos(theta)*sin(psi)*u...
+            + (sin(phi)*sin(theta)*sin(psi)+cos(phi)*cos(psi))*v...
+            + (cos(phi)*sin(theta)*sin(psi)-sin(phi)*cos(psi))*w;
     
-    %pndot = u*(cos(theta)*cos(phi)) + v*(sin(phi)*sin(theta)*cos(psi) - cos(phi)*sin(psi)) + w*(cos(phi)*sin(theta)*cos(psi) + sin(phi)*sin(psi));
-    %pedot = u*(cos(theta)*sin(psi)) + v*(sin(phi)*sin(theta)*sin(psi) + cos(phi)*cos(psi)) + w*(cos(phi)*sin(theta)*sin(psi) - sin(phi)*cos(psi));
-    %pddot = u*(-sin(theta)) + v*(sin(phi)*cos(theta)) + w*(cos(phi)*cos(theta));
-    %udot = r*v - q*w + (P.mass)*fx;
-    %vdot = p*w - r*u + (P.mass)*fy;
-    %wdot = q*u - p*v + (P.mass)*fz;
-    %phidot = p + q*(sin(phi)*tan(theta)) + r*(cos(phi)*tan(theta));
-    %thetadot = q*(cos(phi)) + r*(-sin(phi));
-    %psidot = q*(sin(phi)/cos(theta)) + r*(cos(phi)/cos(theta));
-    %pdot = G1*p*q - G2*q*r + G3*ell + G4*n;
-    %qdot = G5*p*r - G6*(p^2 - r^2) + m/(JJ(2));
-    %rdot = G7*p*r - G1*q*r + G4*ell + G8*n;
+    pddot = -sin(theta)*u...
+            + sin(phi)*cos(theta)*v...
+            + cos(phi)*cos(theta)*w;
     
+    udot = r*v - q*w + (1/P.mass)*fx;
+    
+    vdot = p*w - r*u + (1/P.mass)*fy; 
+    
+    wdot = q*u - p*v + (1/P.mass)*fz;
+    
+    phidot = p + sin(phi)*tan(theta)*q + cos(phi)*tan(theta)*r;
+    
+    thetadot = cos(phi)*q - sin(phi)*r;
+    
+    psidot = (sin(phi)/cos(theta))*q + (cos(phi)/cos(theta))*r;
+    
+    pdot = Gamma1*p*q - Gamma2*q*r + Gamma3*ell + Gamma4*n;
+    
+    qdot = Gamma5*p*r - Gamma4*(p*p-r*r) + (1/P.Jy)*m;
+    
+    rdot = Gamma7*p*q - Gamma1*q*r + Gamma4*ell + Gamma8*n;
+        
 
 sys = [pndot; pedot; pddot; udot; vdot; wdot; phidot; thetadot; psidot; pdot; qdot; rdot];
 
