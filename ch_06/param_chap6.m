@@ -73,7 +73,7 @@ P.sigma_w = .7;
 % compute trim conditions using 'mavsim_chap5_trim.slx'
 % initial airspeed
 P.Va0 = 35;        % m/s (~85 mph)
-gamma = 30*pi/180;  % desired flight path angle (radians)
+gamma = 0*pi/180;  % desired flight path angle (radians)
 R     = Inf;       % desired radius (m) - use (+) for right handed orbit, 
 h0    = 0;  % initial altitude
 
@@ -188,9 +188,9 @@ P.phi_max = 45*pi/180;
    % pick natural frequency to achieve delta_e_max for step of theta_max
    zeta_pitch = 0.9;
    % set control gains based on zeta and wn
-   P.pitch_kp = -delta_e_max/theta_max;
+   P.pitch_kp = 0;%-delta_e_max/theta_max;
    wn_pitch = sqrt(a_theta2+P.pitch_kp*a_theta3);
-   P.pitch_kd = (2*zeta_pitch*wn_pitch - a_theta1)/a_theta3;
+   P.pitch_kd = 100;%(2*zeta_pitch*wn_pitch - a_theta1)/a_theta3;
    P.pitch_ki = 0.0;
    P.K_theta_DC = P.pitch_kp*a_theta3/(a_theta2+P.pitch_kp*a_theta3);
 
