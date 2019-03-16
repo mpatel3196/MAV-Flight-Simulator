@@ -1,4 +1,3 @@
-
 function drawVehicle(uu,V,F,patchcolors)
 
     % process inputs to function
@@ -11,10 +10,10 @@ function drawVehicle(uu,V,F,patchcolors)
     phi      = uu(7);       % roll angle         
     theta    = uu(8);       % pitch angle     
     psi      = uu(9);       % yaw angle     
-    p        = uu(10);       % roll rate
-    q        = uu(11);       % pitch rate     
-    r        = uu(12);       % yaw rate    
-    t        = uu(13);       % time
+    p        = uu(10);      % roll rate
+    q        = uu(11);      % pitch rate     
+    r        = uu(12);      % yaw rate    
+    t        = uu(13);      % time
 
     % define persistent variables 
     persistent vehicle_handle;
@@ -34,7 +33,7 @@ function drawVehicle(uu,V,F,patchcolors)
         ylabel('North')
         zlabel('-Down')
         view(32,47)  % set the vieew angle for figure
-        axis([-10,10,-10,10,-10,10]);
+        axis([-500,500,-500,500,-500,500]);
         hold on
         
     % at every other time step, redraw base and rod
@@ -121,22 +120,22 @@ function [V,F,facecolors] = defineVehicleBody
 
 % Define the vertices (physical location of vertices
 V = [...
-    1.5, 0, 0;...       % pt 1
-    1, 0.5, -0.5;...    % pt 2
-    1, -0.5, -0.5;...   % pt 3
-    1, -0.5, 0.5;...    % pt 4
-    1, 0.5, 0.5;...     % pt 5
-    -4.5, 0, 0;...      % pt 6
-    0, 2.5, 0;...       % pt 7
-    -1, 2.5, 0;...      % pt 8
-    -1, -2.5, 0;...     % pt 9
-    0, -2.5, 0;...      % pt 10
-    -3.75, 1.5, 0;...   % pt 11
-    -4.5, 1.5, 0;...    % pt 12
-    -4.5, -1.5, 0;...   % pt 13
-    -3.75, -1.5, 0;...  % pt 14
-    -3.75, 0, 0;...     % pt 15
-    -4.5, 0, -1.25;...  % pt 16
+    75, 0, 0;...       % pt 1
+    50, 25, -25;...    % pt 2
+    50, -25, -25;...   % pt 3
+    50, -25, 25;...    % pt 4
+    50, 25, 25;...     % pt 5
+    -225, 0, 0;...      % pt 6
+    0, 125, 0;...       % pt 7
+    -50, 125, 0;...      % pt 8
+    -50, -125, 0;...     % pt 9
+    0, -125, 0;...      % pt 10
+    -187.5, 75, 0;...   % pt 11
+    -225, 75, 0;...    % pt 12
+    -225, -75, 0;...   % pt 13
+    -187.5, -75, 0;...  % pt 14
+    -187.5, 0, 0;...     % pt 15
+    -225, 0, -62.5;...  % pt 16
     ]';
 
 % define faces as a list of vertices numbered above
@@ -169,11 +168,10 @@ V = [...
     myblue;...      % fuselage right
     myblue;...      % fuselage left
     myblue;...      % fuselage upper
-    myblue;...      % fuselage bottom
+    myred;...      % fuselage bottom
     mygreen;...     % wing
     mygreen;...     % horizontal tail
     myblue;...      % vertical tail
     ];
 end
   
-
