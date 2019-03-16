@@ -2,7 +2,6 @@ function out=airdata(uu)
 %
 % Fake air data - this will be replaced with real air data in Chapter 4
 %
-% modified 12/11/2009 - RB
 
     % process inputs to function
     pn          = uu(1);             % North position (meters)

@@ -139,7 +139,7 @@ function sys=mdlDerivatives(t,x,uu, P)
     m     = uu(5);
     n     = uu(6);
     
-    % PARTH == precalculating angles values
+    % precalculating angles values
     Ctheta = cos(theta);
     Stheta = sin(theta);
     Ttheta = tan(theta);
@@ -148,7 +148,7 @@ function sys=mdlDerivatives(t,x,uu, P)
     Cphi   = cos(phi);
     Sphi   = sin(phi);
     
-    % PARTH - stroing J Matrix values in this file
+    % stroing J Matrix values in this file
     JJ = [
         P.Jx;...
         P.Jy;...
@@ -156,7 +156,7 @@ function sys=mdlDerivatives(t,x,uu, P)
         P.Jxz;...
         ];
       
-    % PARTH = Gamma values for Inertia Matrix
+    % Gamma values for Inertia Matrix
     G = JJ(1)*JJ(3) - JJ(4)^2;
     G1 = (JJ(4)*(JJ(1) -JJ(2)+JJ(3))) / G;
     G2 = (JJ(3)*(JJ(3)-JJ(2))+(JJ(4)^2)) / G;
@@ -180,19 +180,6 @@ function sys=mdlDerivatives(t,x,uu, P)
     pdot = G1*p*q - G2*q*r + G3*ell + G4*n;
     qdot = G5*p*r - G6*(p^2 - r^2) + m/(JJ(2));
     rdot = G7*p*r - G1*q*r + G4*ell + G8*n;
-    
-    %pndot = u*(cos(theta)*cos(phi)) + v*(sin(phi)*sin(theta)*cos(psi) - cos(phi)*sin(psi)) + w*(cos(phi)*sin(theta)*cos(psi) + sin(phi)*sin(psi));
-    %pedot = u*(cos(theta)*sin(psi)) + v*(sin(phi)*sin(theta)*sin(psi) + cos(phi)*cos(psi)) + w*(cos(phi)*sin(theta)*sin(psi) - sin(phi)*cos(psi));
-    %pddot = u*(-sin(theta)) + v*(sin(phi)*cos(theta)) + w*(cos(phi)*cos(theta));
-    %udot = r*v - q*w + (P.mass)*fx;
-    %vdot = p*w - r*u + (P.mass)*fy;
-    %wdot = q*u - p*v + (P.mass)*fz;
-    %phidot = p + q*(sin(phi)*tan(theta)) + r*(cos(phi)*tan(theta));
-    %thetadot = q*(cos(phi)) + r*(-sin(phi));
-    %psidot = q*(sin(phi)/cos(theta)) + r*(cos(phi)/cos(theta));
-    %pdot = G1*p*q - G2*q*r + G3*ell + G4*n;
-    %qdot = G5*p*r - G6*(p^2 - r^2) + m/(JJ(2));
-    %rdot = G7*p*r - G1*q*r + G4*ell + G8*n;
     
 
 sys = [pndot; pedot; pddot; udot; vdot; wdot; phidot; thetadot; psidot; pdot; qdot; rdot];
