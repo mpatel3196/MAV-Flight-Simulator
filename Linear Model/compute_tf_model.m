@@ -3,11 +3,6 @@ function [T_phi_delta_a,T_chi_phi,T_theta_delta_e,T_h_theta,T_h_Va,T_Va_delta_t,
 % x_trim is the trimmed state,
 % u_trim is the trimmed input
 
-% compute Gamma
-G = P.Jx*P.Jz-P.Jxz^2;
-G3 = P.Jz/G;
-G4 = P.Jxz/G;
-
 
 Va_trim = sqrt(x_trim(4)^2 + x_trim(5)^2 + x_trim(6)^2) ;
 theta_trim = x_trim(8) ;
@@ -15,9 +10,9 @@ alpha_trim = atan(x_trim(6)/x_trim(4)) ;
 delta_e_trim = u_trim(1) ;
 delta_t_trim = u_trim(4) ;
 
-C_P_p = G3*P.C_ell_p + G4*P.C_n_p;
+C_P_p = P.gamma_3*P.C_ell_p + P.gamma_4*P.C_n_p;
 a_phi1 = -0.25*P.rho*Va_trim*P.S_wing*(P.b^2)*C_P_p;
-C_P_delta_a = G3*P.C_ell_delta_a + G4*P.C_n_delta_a;
+C_P_delta_a = P.gamma_3*P.C_ell_delta_a + P.gamma_4*P.C_n_delta_a;
 a_phi2 = 0.5*P.rho*(Va_trim^2)*P.S_wing*P.b*C_P_delta_a;
 
 a_theta1 = -0.25*P.rho*Va_trim*(P.c^2)*P.S_wing*P.C_m_q/P.Jy;

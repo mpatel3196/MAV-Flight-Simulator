@@ -43,6 +43,7 @@ switch flag,
   %%%%%%%%%%%%%%%%%%%%
   otherwise
     DAStudio.error('Simulink:blocks:unhandledFlag', num2str(flag));
+    
 
 end
 
@@ -139,60 +140,18 @@ function sys=mdlDerivatives(t,x,uu, P)
     m     = uu(5);
     n     = uu(6);
     
-    % PARTH == precalculating angles values
-    Ctheta = cos(theta);
-    Stheta = sin(theta);
-    Ttheta = tan(theta);
-    Cpsi   = cos(psi);
-    Spsi   = sin(psi);
-    Cphi   = cos(phi);
-    Sphi   = sin(phi);
-    
-    % PARTH - stroing J Matrix values in this file
-    JJ = [
-        P.Jx;...
-        P.Jy;...
-        P.Jz;...
-        P.Jxz;...
-        ];
-      
-    % PARTH = Gamma values for Inertia Matrix
-    G = JJ(1)*JJ(3) - JJ(4)^2;
-    G1 = (JJ(4)*(JJ(1) -JJ(2)+JJ(3))) / G;
-    G2 = (JJ(3)*(JJ(3)-JJ(2))+(JJ(4)^2)) / G;
-    G3 = JJ(3) / G;
-    G4 = JJ(4) / G;
-    G5 = (JJ(3)-JJ(1)) / JJ(2);
-    G6 = JJ(4) / JJ(2);
-    G7 = ((JJ(1)-JJ(2))*JJ(1) + (JJ(4)^2)) / G;
-    G8 = JJ(1) / G;
-    
-  
-    pndot = u*(Ctheta*Cpsi) + v*(Sphi*Stheta*Cpsi - Cphi*Spsi) + w*(Cphi*Stheta*Cpsi + Sphi*Spsi);
-    pedot = u*(Ctheta*Spsi) + v*(Sphi*Stheta*Spsi + Cphi*Cpsi) + w*(Cphi*Stheta*Spsi - Sphi*Cpsi);
-    pddot = u*(-Stheta) + v*(Sphi*Ctheta) + w*(Cphi*Ctheta);
-    udot = r*v - q*w + (P.mass)*fx;
-    vdot = p*w - r*u + (P.mass)*fy;
-    wdot = q*u - p*v + (P.mass)*fz;
-    phidot = p + q*(Sphi*Ttheta) + r*(Cphi*Ttheta);
-    thetadot = q*(Cphi) + r*(-Sphi);
-    psidot = q*(Sphi/Ctheta) + r*(Cphi/Ctheta);
-    pdot = G1*p*q - G2*q*r + G3*ell + G4*n;
-    qdot = G5*p*r - G6*(p^2 - r^2) + m/(JJ(2));
-    rdot = G7*p*r - G1*q*r + G4*ell + G8*n;
-    
-    %pndot = u*(cos(theta)*cos(phi)) + v*(sin(phi)*sin(theta)*cos(psi) - cos(phi)*sin(psi)) + w*(cos(phi)*sin(theta)*cos(psi) + sin(phi)*sin(psi));
-    %pedot = u*(cos(theta)*sin(psi)) + v*(sin(phi)*sin(theta)*sin(psi) + cos(phi)*cos(psi)) + w*(cos(phi)*sin(theta)*sin(psi) - sin(phi)*cos(psi));
-    %pddot = u*(-sin(theta)) + v*(sin(phi)*cos(theta)) + w*(cos(phi)*cos(theta));
-    %udot = r*v - q*w + (P.mass)*fx;
-    %vdot = p*w - r*u + (P.mass)*fy;
-    %wdot = q*u - p*v + (P.mass)*fz;
-    %phidot = p + q*(sin(phi)*tan(theta)) + r*(cos(phi)*tan(theta));
-    %thetadot = q*(cos(phi)) + r*(-sin(phi));
-    %psidot = q*(sin(phi)/cos(theta)) + r*(cos(phi)/cos(theta));
-    %pdot = G1*p*q - G2*q*r + G3*ell + G4*n;
-    %qdot = G5*p*r - G6*(p^2 - r^2) + m/(JJ(2));
-    %rdot = G7*p*r - G1*q*r + G4*ell + G8*n;
+    pndot = u*(cos(theta)*cos(psi))+v*(sin(phi)*sin(theta)*cos(psi)-cos(phi)*sin(psi))+w*(cos(phi)*sin(theta)*cos(psi)+sin(phi)*sin(psi));
+    pedot = u*(cos(theta)*sin(psi))+v*(sin(phi)*sin(theta)*sin(psi)+cos(phi)*cos(psi))+w*(cos(phi)*sin(theta)*sin(psi)-sin(phi)*cos(psi));
+    pddot = u*(-sin(theta))+v*(sin(phi)*cos(theta))+w*(cos(phi)*cos(theta));
+    udot = r*v-q*w +(1/P.mass)*fx;
+    vdot = p*w-r*u +(1/P.mass)*fy;
+    wdot = q*u-p*v +(1/P.mass)*fz;
+    phidot = p+q*(sin(phi)*tan(theta))+r*(cos(phi)*tan(theta));
+    thetadot = q *cos(phi)-r*sin(phi);
+    psidot = q*(sin(phi)/cos(theta))+r*(cos(phi)/cos(theta));
+    pdot = P.gamma_1*p*q-P.gamma_2*q*r + P.gamma_3*ell+P.gamma_4*n;
+    qdot = P.gamma_5*p*r-P.gamma_6*(p^2-r^2) + (1/P.Jy)*m;
+    rdot = P.gamma_7*p*q-P.gamma_1*q*r + P.gamma_4*ell+P.gamma_8*n;
     
 
 sys = [pndot; pedot; pddot; udot; vdot; wdot; phidot; thetadot; psidot; pdot; qdot; rdot];
