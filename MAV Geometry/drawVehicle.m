@@ -174,4 +174,3 @@ V = [...
     myblue;...      % vertical tail
     ];
 end
-  
