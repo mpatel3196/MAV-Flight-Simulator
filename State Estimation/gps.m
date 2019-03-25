@@ -1,6 +1,9 @@
 % gps.m
 %   Compute the output of gps sensor
 %
+%  Revised:
+%   3/5/2010 - RB 
+%   5/14/2010 - RB
 
 function y = gps(uu, P)
 
@@ -25,41 +28,42 @@ function y = gps(uu, P)
 %    r       = uu(18);
     t       = uu(19);
     
-% construct North, East, and altitude GPS measurements 
-% old measurements
-persistent v_n_d1;
-persistent v_e_d1;
-persistent v_d_d1;
-
-if t == 0
-    v_n_d1 = 0;
-    v_e_d1 = 0;
-    v_d_d1 = 0;
-end        
-
-v_n = exp(-1/1100)*v_n_d1 + 0.4*randn;
-v_e = exp(-1/1100)*v_e_d1 + 0.4*randn;
-v_d = exp(-1/1100)*v_d_d1 + 0.7*randn;
-
-y_gps_n = pn + v_n;
-y_gps_e = pe + v_e; 
-y_gps_h = pd + v_d; 
-
-% update old error
-v_n_d1 = v_n;
-v_e_d1 = v_e;
-v_d_d1 = v_d;
-
-% construct groundspeed and course measurements
-Vn = Va*cos(psi) + wn;
-Ve = Va*sin(psi) + we;
-Vg = sqrt(Vn^2 + Ve^2);
-
-sigma_Vg = 2.1;
-sigma_chi = sigma_Vg/Vg;
-
-y_gps_Vg = Vg + sigma_Vg*randn(1);
-y_gps_course = atan2(Ve,Vn) + sigma_chi*randn(1);
+ 
+    % construct North, East, and altitude GPS measurements
+    % old measurements
+    persistent v_n_d1;
+    persistent v_e_d1;
+    persistent v_d_d1;
+        
+    if t == 0
+        v_n_d1 = 0;
+        v_e_d1 = 0;
+        v_d_d1 = 0;
+    end        
+    
+    v_n = exp(-1/1100)*v_n_d1 + 0.4*randn(1);
+    v_e = exp(-1/1100)*v_e_d1 + 0.4*randn(1);
+    v_d = exp(-1/1100)*v_d_d1 + 0.7*randn(1);
+    
+    y_gps_n = pn + v_n;
+    y_gps_e = pe + v_e; 
+    y_gps_h = pd + v_d; 
+    
+    % update old error
+    v_n_d1 = v_n;
+    v_e_d1 = v_e;
+    v_d_d1 = v_d;
+    
+    % construct groundspeed and course measurements
+    Vn = Va*cos(psi) + wn;
+    Ve = Va*sin(psi) + we;
+    Vg = sqrt(Vn^2 + Ve^2);
+    
+    sigma_Vg = 2.1;
+    sigma_chi = sigma_Vg/Vg;
+    
+    y_gps_Vg = Vg + sigma_Vg*randn(1);
+    y_gps_course = atan2(Ve,Vn) + sigma_chi*randn(1);
 
     % construct total output
     y = [...

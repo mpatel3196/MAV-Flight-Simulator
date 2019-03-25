@@ -1,11 +1,12 @@
-P.gravity = 9.81; % m/s^2
+P.gravity = 9.81;
    
+% Params for Aersonade UAV
 %physical parameters of airframe
-P.mass = 25; %13.5; % kg
-P.Jx   = 0.8244; % kg m^2
-P.Jy   = 1.135; % kg m^2
-P.Jz   = 1.759; % kg m^2
-P.Jxz  = 0.1204; % kg m^2
+P.mass = 25;%13.5;
+P.Jx   = 0.8244;
+P.Jy   = 1.135;
+P.Jz   = 1.759;
+P.Jxz  = .1204;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % aerodynamic coefficients
@@ -15,6 +16,7 @@ P.c             = 0.18994;
 P.S_prop        = 0.2027;
 P.rho           = 1.2682;
 P.k_motor       = 80;
+%P.k_motor = 15;
 P.k_T_P         = 0;
 P.k_Omega       = 0;
 P.e             = 0.9;
@@ -51,6 +53,8 @@ P.C_n_r         = -0.35;
 P.C_n_delta_a   = 0.06;
 P.C_n_delta_r   = -0.032;
 P.C_prop        = 1.0;
+%     % HACK: prop has too much power for aerosonde
+%     P.C_prop = 0.5;
 P.M             = 50;
 P.epsilon       = 0.1592;
 P.alpha0        = 0.4712;
@@ -79,33 +83,6 @@ P.C_T1 = -0.06044;
 P.C_T0 = 0.09357;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% sample time
-%P.Ts = 10;
-% autopilot sample rate
-P.Ts = 0.01;
-
-% compute trim conditions using 'mavsim_chap5_trim.mdl'
-P.Va    = 17;         % desired airspeed (m/s)
-gamma = 0*pi/180;  % desired flight path angle (radians)
-R     = 150; %150;         % desired radius (m) - use (+) for right handed orbit, 
-                    %                          (-) for left handed orbit
-                    
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% initial conditions
-P.pn0    = 0;  % initial North position
-P.pe0    = 0;  % initial East position
-P.pd0    = 0;  % initial Down position (negative altitude)
-P.u0     = P.Va;  % initial velocity along body x-axis
-P.v0     = 0;  % initial velocity along body y-axis
-P.w0     = 0;  % initial velocity along body z-axis
-P.phi0   = 0;  % initial roll angle
-P.theta0 = 0;  % initial pitch angle
-P.psi0   = 0*pi/180;  % initial yaw angle
-P.p0     = 0;  % initial body frame roll rate
-P.q0     = 0;  % initial body frame pitch rate
-P.r0     = 0;  % initial body frame yaw rate
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 P.gamma = P.Jx*P.Jz-P.Jxz^2;
 P.gamma_1 = (P.Jxz*(P.Jx-P.Jy+P.Jz))/P.gamma;
 P.gamma_2 = (P.Jz*(P.Jz-P.Jy)+P.Jxz^2)/P.gamma;
@@ -117,17 +94,43 @@ P.gamma_7 = ((P.Jx-P.Jy)*P.Jx+P.Jxz^2)/P.gamma;
 P.gamma_8 = P.Jx/P.gamma;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% wind
-P.wind_n = 0.00001;
-P.wind_e = 0.00001;
-P.wind_d = 0.00001;
+% wind parameters
+P.wind_n = 0;%3;
+P.wind_e = 0;%2;
+P.wind_d = 0;
 P.L_u = 200;
 P.L_v = 200;
 P.L_w = 50;
-P.sigma_u = 1.06;
+P.sigma_u = 1.06; 
 P.sigma_v = 1.06;
-P.sigma_w = 0.7;
-%P.Va0 = 13;
+P.sigma_w = .7;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% compute trim conditions using 'mavsim_chap5_trim.slx'
+% initial airspeed
+P.Va = 35;        % m/s (~85 mph)
+gamma = 0*pi/180;  % desired flight path angle (radians)
+R     = Inf;       % desired radius (m) - use (+) for right handed orbit, 
+h0    = 0;  % initial altitude
+
+% autopilot sample rate
+P.Ts = 0.01;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% first cut at initial conditions
+P.pn0    = 0;  % initial North position
+P.pe0    = 0;  % initial East position
+P.pd0    = 0;  % initial Down position (negative altitude)
+P.u0     = P.Va; % initial velocity along body x-axis
+P.v0     = 0;  % initial velocity along body y-axis
+P.w0     = 0;  % initial velocity along body z-axis
+P.phi0   = 0;  % initial roll angle
+P.theta0 = 0;  % initial pitch angle
+P.psi0   = 0;  % initial yaw angle
+P.p0     = 0;  % initial body frame roll rate
+P.q0     = 0;  % initial body frame pitch rate
+P.r0     = 0;  % initial body frame yaw rate
+%                          (-) for left handed orbit
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % run trim commands
@@ -135,20 +138,26 @@ P.sigma_w = 0.7;
 P.u_trim = u_trim;
 P.x_trim = x_trim;
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % set initial conditions to trim conditions
 % initial conditions
+P.pn0    = 0;  % initial North position
+P.pe0    = 0;  % initial East position
+P.pd0    = -h0;  % initial Down position (negative altitude)
 P.u0     = x_trim(4);  % initial velocity along body x-axis
 P.v0     = x_trim(5);  % initial velocity along body y-axis
 P.w0     = x_trim(6);  % initial velocity along body z-axis
 P.phi0   = x_trim(7);  % initial roll angle
 P.theta0 = x_trim(8);  % initial pitch angle
+P.psi0   = x_trim(9);  % initial yaw angle
 P.p0     = x_trim(10);  % initial body frame roll rate
 P.q0     = x_trim(11);  % initial body frame pitch rate
 P.r0     = x_trim(12);  % initial body frame yaw rate
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % compute different transfer functions
 [T_phi_delta_a,T_chi_phi,T_theta_delta_e,T_h_theta,T_h_Va,T_Va_delta_t,T_Va_theta,T_v_delta_r]...
-   = compute_tf_model(x_trim,u_trim,P);
+    = compute_tf_model(x_trim,u_trim,P);
 
 % linearize the equations of motion around trim conditions
 [A_lon, B_lon, A_lat, B_lat] = compute_ss_model('mavsim_trim',x_trim,u_trim);
@@ -273,4 +282,3 @@ P.phi_max = 45*pi/180;
       P.kd_v = 0;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-

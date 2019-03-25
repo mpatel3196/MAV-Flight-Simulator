@@ -69,7 +69,7 @@ P.p0     = 0;  % initial body frame roll rate
 P.q0     = 0;  % initial body frame pitch rate
 P.r0     = 0;  % initial body frame yaw rate
 
-
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 P.gamma = P.Jx*P.Jz-P.Jxz^2;
 P.gamma_1 = (P.Jxz*(P.Jx-P.Jy+P.Jz))/P.gamma;
 P.gamma_2 = (P.Jz*(P.Jz-P.Jy)+P.Jxz^2)/P.gamma;
@@ -80,11 +80,11 @@ P.gamma_6 = P.Jxz/P.Jy;
 P.gamma_7 = ((P.Jx-P.Jy)*P.Jx+P.Jxz^2)/P.gamma;
 P.gamma_8 = P.Jx/P.gamma;
 
-
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % wind
-P.wind_n = 0.00001;
-P.wind_e = 0.00001;
-P.wind_d = 0.00001;
+P.wind_n = 0;
+P.wind_e = 0;
+P.wind_d = 0;
 P.L_u = 200;
 P.L_v = 200;
 P.L_w = 50;
@@ -96,9 +96,8 @@ P.Va0 = 25;
 % sample time
 P.Ts = 10;
 
-%######################################################################################
- %               #   Propeller thrust / torque parameters (see addendum by McLain)
-%######################################################################################
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Propeller thrust / torque parameters (see addendum by McLain)
 % Prop parameters
 P.D_prop = 20*(0.0254)     % prop diameter in m
 
@@ -120,3 +119,5 @@ P.C_Q0 = 0.005230
 P.C_T2 = -0.1079
 P.C_T1 = -0.06044
 P.C_T0 = 0.09357
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

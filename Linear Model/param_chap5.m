@@ -85,10 +85,11 @@ P.C_T0 = 0.09357;
 P.Ts = 0.01;
 
 % compute trim conditions using 'mavsim_chap5_trim.mdl'
-P.Va    = 17;         % desired airspeed (m/s)
-gamma = 5*pi/180;  % desired flight path angle (radians)
+P.Va    = 35;         % desired airspeed (m/s)
+gamma = 0*pi/180;  % desired flight path angle (radians)
 R     = 0; %150;         % desired radius (m) - use (+) for right handed orbit, 
                     %                          (-) for left handed orbit
+h0    = 0;  % initial altitude
                     
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % initial conditions
@@ -100,7 +101,7 @@ P.v0     = 0;  % initial velocity along body y-axis
 P.w0     = 0;  % initial velocity along body z-axis
 P.phi0   = 0;  % initial roll angle
 P.theta0 = 0;  % initial pitch angle
-P.psi0   = 0*pi/180;  % initial yaw angle
+P.psi0   = 0;  % initial yaw angle
 P.p0     = 0;  % initial body frame roll rate
 P.q0     = 0;  % initial body frame pitch rate
 P.r0     = 0;  % initial body frame yaw rate
@@ -118,9 +119,9 @@ P.gamma_8 = P.Jx/P.gamma;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % wind
-P.wind_n = 0.00001;
-P.wind_e = 0.00001;
-P.wind_d = 0.00001;
+P.wind_n = 0;
+P.wind_e = 0;
+P.wind_d = 0;
 P.L_u = 200;
 P.L_v = 200;
 P.L_w = 50;
@@ -137,6 +138,9 @@ P.x_trim = x_trim;
 
 % set initial conditions to trim conditions
 % initial conditions
+P.pn0    = 0;   % Initial North position
+P.pe0    = 0;   % Initial East position
+P.Pd0    = -h0; % Initial Down postion
 P.u0     = x_trim(4);  % initial velocity along body x-axis
 P.v0     = x_trim(5);  % initial velocity along body y-axis
 P.w0     = x_trim(6);  % initial velocity along body z-axis

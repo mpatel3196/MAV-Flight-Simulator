@@ -1,4 +1,4 @@
-function xhat = estimate_states(uu,P)
+function xhat = true_states(uu,P)
 %
 % fake state estimation for mavsim
 %   - this function will be replaced with a state estimator in a later

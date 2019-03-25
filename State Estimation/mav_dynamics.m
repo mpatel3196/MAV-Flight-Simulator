@@ -1,5 +1,104 @@
 function [sys,x0,str,ts,simStateCompliance] = mav_dynamics(t,x,u,flag,P)
+%SFUNTMPL General MATLAB S-Function Template
+%   With MATLAB S-functions, you can define you own ordinary differential
+%   equations (ODEs), discrete system equations, and/or just about
+%   any type of algorithm to be used within a Simulink block diagram.
+%
+%   The general form of an MATLAB S-function syntax is:
+%       [SYS,X0,STR,TS,SIMSTATECOMPLIANCE] = SFUNC(T,X,U,FLAG,P1,...,Pn)
+%
+%   What is returned by SFUNC at a given point in time, T, depends on the
+%   value of the FLAG, the current state vector, X, and the current
+%   input vector, U.
+%
+%   FLAG   RESULT             DESCRIPTION
+%   -----  ------             --------------------------------------------
+%   0      [SIZES,X0,STR,TS]  Initialization, return system sizes in SYS,
+%                             initial state in X0, state ordering strings
+%                             in STR, and sample times in TS.
+%   1      DX                 Return continuous state derivatives in SYS.
+%   2      DS                 Update discrete states SYS = X(n+1)
+%   3      Y                  Return outputs in SYS.
+%   4      TNEXT              Return next time hit for variable step sample
+%                             time in SYS.
+%   5                         Reserved for future (root finding).
+%   9      []                 Termination, perform any cleanup SYS=[].
+%
+%
+%   The state vectors, X and X0 consists of continuous states followed
+%   by discrete states.
+%
+%   Optional parameters, P1,...,Pn can be provided to the S-function and
+%   used during any FLAG operation.
+%
+%   When SFUNC is called with FLAG = 0, the following information
+%   should be returned:
+%
+%      SYS(1) = Number of continuous states.
+%      SYS(2) = Number of discrete states.
+%      SYS(3) = Number of outputs.
+%      SYS(4) = Number of inputs.
+%               Any of the first four elements in SYS can be specified
+%               as -1 indicating that they are dynamically sized. The
+%               actual length for all other flags will be equal to the
+%               length of the input, U.
+%      SYS(5) = Reserved for root finding. Must be zero.
+%      SYS(6) = Direct feedthrough flag (1=yes, 0=no). The s-function
+%               has direct feedthrough if U is used during the FLAG=3
+%               call. Setting this to 0 is akin to making a promise that
+%               U will not be used during FLAG=3. If you break the promise
+%               then unpredictable results will occur.
+%      SYS(7) = Number of sample times. This is the number of rows in TS.
+%
+%
+%      X0     = Initial state conditions or [] if no states.
+%
+%      STR    = State ordering strings which is generally specified as [].
+%
+%      TS     = An m-by-2 matrix containing the sample time
+%               (period, offset) information. Where m = number of sample
+%               times. The ordering of the sample times must be:
+%
+%               TS = [0      0,      : Continuous sample time.
+%                     0      1,      : Continuous, but fixed in minor step
+%                                      sample time.
+%                     PERIOD OFFSET, : Discrete sample time where
+%                                      PERIOD > 0 & OFFSET < PERIOD.
+%                     -2     0];     : Variable step discrete sample time
+%                                      where FLAG=4 is used to get time of
+%                                      next hit.
+%
+%               There can be more than one sample time providing
+%               they are ordered such that they are monotonically
+%               increasing. Only the needed sample times should be
+%               specified in TS. When specifying more than one
+%               sample time, you must check for sample hits explicitly by
+%               seeing if
+%                  abs(round((T-OFFSET)/PERIOD) - (T-OFFSET)/PERIOD)
+%               is within a specified tolerance, generally 1e-8. This
+%               tolerance is dependent upon your model's sampling times
+%               and simulation time.
+%
+%               You can also specify that the sample time of the S-function
+%               is inherited from the driving block. For functions which
+%               change during minor steps, this is done by
+%               specifying SYS(7) = 1 and TS = [-1 0]. For functions which
+%               are held during minor steps, this is done by specifying
+%               SYS(7) = 1 and TS = [-1 1].
+%
+%      SIMSTATECOMPLIANCE = Specifices how to handle this block when saving and
+%                           restoring the complete simulation state of the
+%                           model. The allowed values are: 'DefaultSimState',
+%                           'HasNoSimState' or 'DisallowSimState'. If this value
+%                           is not speficified, then the block's compliance with
+%                           simState feature is set to 'UknownSimState'.
 
+
+%   Copyright 1990-2010 The MathWorks, Inc.
+
+%
+% The following outlines the general structure of an S-function.
+%
 switch flag,
 
   %%%%%%%%%%%%%%%%%%
@@ -43,11 +142,9 @@ switch flag,
   %%%%%%%%%%%%%%%%%%%%
   otherwise
     DAStudio.error('Simulink:blocks:unhandledFlag', num2str(flag));
-    
 
 end
 
-% end sfuntmpl
 
 %
 %=============================================================================
@@ -71,7 +168,7 @@ sizes.NumContStates  = 12;
 sizes.NumDiscStates  = 0;
 sizes.NumOutputs     = 12;
 sizes.NumInputs      = 6;
-sizes.DirFeedthrough = 0;
+sizes.DirFeedthrough = 1;
 sizes.NumSampleTimes = 1;   % at least one sample time is needed
 
 sys = simsizes(sizes);
@@ -79,19 +176,19 @@ sys = simsizes(sizes);
 %
 % initialize the initial conditions
 %
-x0  = [...
-    P.pn0;...
-    P.pe0;...
-    P.pd0;...
-    P.u0;...
-    P.v0;...
-    P.w0;...
-    P.phi0;...
-    P.theta0;...
-    P.psi0;...
-    P.p0;...
-    P.q0;...
-    P.r0;...
+x0  = [
+    P.pn0;
+    P.pe0;
+    P.pd0;
+    P.u0;
+    P.v0;
+    P.w0;
+    P.phi0;
+    P.theta0;
+    P.psi0;
+    P.p0;
+    P.q0;
+    P.r0;
     ];
 
 %
@@ -119,42 +216,52 @@ simStateCompliance = 'UnknownSimState';
 % Return the derivatives for the continuous states.
 %=============================================================================
 %
-function sys=mdlDerivatives(t,x,uu, P)
+function sys=mdlDerivatives(t,x,uu,P)
 
-    pn    = x(1);
-    pe    = x(2);
-    pe    = x(3);
-    u     = x(4);
-    v     = x(5);
-    w     = x(6);
-    phi   = x(7);
-    theta = x(8);
-    psi   = x(9);
-    p     = x(10);
-    q     = x(11);
-    r     = x(12);
-    fx    = uu(1);
-    fy    = uu(2);
-    fz    = uu(3);
-    ell   = uu(4);
-    m     = uu(5);
-    n     = uu(6);
-    
-    pndot = u*(cos(theta)*cos(psi))+v*(sin(phi)*sin(theta)*cos(psi)-cos(phi)*sin(psi))+w*(cos(phi)*sin(theta)*cos(psi)+sin(phi)*sin(psi));
-    pedot = u*(cos(theta)*sin(psi))+v*(sin(phi)*sin(theta)*sin(psi)+cos(phi)*cos(psi))+w*(cos(phi)*sin(theta)*sin(psi)-sin(phi)*cos(psi));
-    pddot = u*(-sin(theta))+v*(sin(phi)*cos(theta))+w*(cos(phi)*cos(theta));
-    udot = r*v-q*w +(1/P.mass)*fx;
-    vdot = p*w-r*u +(1/P.mass)*fy;
-    wdot = q*u-p*v +(1/P.mass)*fz;
-    phidot = p+q*(sin(phi)*tan(theta))+r*(cos(phi)*tan(theta));
-    thetadot = q *cos(phi)-r*sin(phi);
-    psidot = q*(sin(phi)/cos(theta))+r*(cos(phi)/cos(theta));
-    pdot = P.gamma_1*p*q-P.gamma_2*q*r + P.gamma_3*ell+P.gamma_4*n;
-    qdot = P.gamma_5*p*r-P.gamma_6*(p^2-r^2) + (1/P.Jy)*m;
-    rdot = P.gamma_7*p*q-P.gamma_1*q*r + P.gamma_4*ell+P.gamma_8*n;
-    
+% Make the state something a little more readable
+pn = x(1);
+pe = x(2);
+pd = x(3);
+u = x(4);
+v = x(5);
+w = x(6);
+phi = x(7);
+theta = x(8);
+psi = x(9);
+p = x(10);
+q = x(11);
+r = x(12);
 
-sys = [pndot; pedot; pddot; udot; vdot; wdot; phidot; thetadot; psidot; pdot; qdot; rdot];
+% get inputs
+fX = uu(1);
+fY = uu(2);
+fZ = uu(3);
+ell = uu(4);
+m = uu(5);
+n = uu(6);
+
+% Equations of Motion
+%* Checked
+pn_dot = cos(theta)*cos(psi)*u + (sin(phi)*sin(theta)*cos(psi) - cos(phi)*sin(psi))*v + (cos(phi)*sin(theta)*cos(psi) + sin(phi)*sin(psi))*w;
+pe_dot = cos(theta)*sin(psi)*u + (sin(phi)*sin(theta)*sin(psi) + cos(phi)*cos(psi))*v + (cos(phi)*sin(theta)*sin(psi) - sin(phi)*cos(psi))*w;
+pd_dot = -sin(theta)*u + sin(phi)*cos(theta)*v + cos(phi)*cos(theta)*w;
+
+%* Checked
+u_dot = r*v - q*w + fX/P.mass;
+v_dot = p*w - r*u + fY/P.mass;
+w_dot = q*u - p*v + fZ/P.mass;
+
+%* Checked
+phi_dot = p + sin(phi)*tan(theta)*q + cos(phi)*tan(theta)*r;
+theta_dot = cos(phi)*q - sin(phi)*r;
+psi_dot = sin(phi)*q/cos(theta) + cos(phi)*r/cos(theta);
+
+%* Checked
+p_dot = P.Gamma1*p*q - P.Gamma2*q*r + P.Gamma3*ell + P.Gamma4*n;
+q_dot = P.Gamma5*p*r - P.Gamma6*(p^2 - r^2) + m/P.Jy;
+r_dot = P.Gamma7*p*q - P.Gamma1*q*r + P.Gamma4*ell + P.Gamma8*n;
+
+sys = [pn_dot; pe_dot; pd_dot; u_dot; v_dot; w_dot; phi_dot; theta_dot; psi_dot; p_dot; q_dot; r_dot]; % assign derivatives of states to sys
 
 % end mdlDerivatives
 

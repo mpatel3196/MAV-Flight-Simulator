@@ -1,13 +1,14 @@
-P.gravity = 9.81; % m/s^2
+P = struct;
+P.g = 9.81;
    
-%physical parameters of airframe
-P.mass = 25; %13.5; % kg
-P.Jx   = 0.8244; % kg m^2
-P.Jy   = 1.135; % kg m^2
-P.Jz   = 1.759; % kg m^2
-P.Jxz  = 0.1204; % kg m^2
+% Using Aerosonde UAV parameters, Appendix E.
+% physical parameters of airframe
+P.mass = 25;
+P.Jx   = 0.8244;
+P.Jy   = 1.135;
+P.Jz   = 1.759;
+P.Jxz  = 0.1204;
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % aerodynamic coefficients
 P.S_wing        = 0.55;
 P.b             = 2.8956;
@@ -18,9 +19,11 @@ P.k_motor       = 80;
 P.k_T_P         = 0;
 P.k_Omega       = 0;
 P.e             = 0.9;
+P.AR            = P.b^2/P.S_wing;
 
 P.C_L_0         = 0.28;
 P.C_L_alpha     = 3.45;
+% P.C_L_alpha = pi*P.AR/(1+sqrt(1+(P.AR/2)^2)); % approximation given
 P.C_L_q         = 0.0;
 P.C_L_delta_e   = -0.36;
 P.C_D_0         = 0.03;
@@ -55,239 +58,123 @@ P.M             = 50;
 P.epsilon       = 0.1592;
 P.alpha0        = 0.4712;
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Prop parameters
-P.D_prop = 20*(0.0254);     % prop diameter in m
+% Set control surface limits
+P.delta_e_up = 45*pi/180;
+P.delta_e_down = -45*pi/180;
 
-% Motor parameters
-P.K_V = 145.;                   % from datasheet RPM/V
-P.KQ = (1. / P.K_V) * 60. / (2. * pi);  % KQ in N-m/A, V-s/rad
-P.R_motor = 0.042;              % ohms
-P.i0 = 1.5;                     % no-load (zero-torque) current (A)
+P.delta_a_up = 30*pi/180;
+P.delta_a_down = -30*pi/180;
 
+P.delta_r_up = 45*pi/180;
+P.delta_r_down = -45*pi/180;
 
-% Inputs
-P.ncells = 12.;
-P.V_max = 3.7 * P.ncells;  % max voltage for specified number of battery cells
+P.delta_t_up = 1;
+P.delta_t_down = 0;
 
-% Coeffiecients from prop_data fit
-P.C_Q2 = -0.01664;
-P.C_Q1 = 0.004970;
-P.C_Q0 = 0.005230;
-P.C_T2 = -0.1079;
-P.C_T1 = -0.06044;
-P.C_T0 = 0.09357;
+% Take-off Values
+P.altitude_hold_zone = 80;
+P.altitude_take_off_zone = 50;
+P.theta_take_off = 15*pi/180;
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% sample time
-%P.Ts = 10;
-% autopilot sample rate
-P.Ts = 0.01;
+% Gamma values % Checked*
+P.Gamma = P.Jx*P.Jz - P.Jxz^2;
 
-% compute trim conditions using 'mavsim_chap5_trim.mdl'
-P.Va    = 17;         % desired airspeed (m/s)
-gamma = 0*pi/180;  % desired flight path angle (radians)
-R     = 150; %150;         % desired radius (m) - use (+) for right handed orbit, 
-                    %                          (-) for left handed orbit
-                    
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% initial conditions
-P.pn0    = 0;  % initial North position
-P.pe0    = 0;  % initial East position
-P.pd0    = 0;  % initial Down position (negative altitude)
-P.u0     = P.Va;  % initial velocity along body x-axis
-P.v0     = 0;  % initial velocity along body y-axis
-P.w0     = 0;  % initial velocity along body z-axis
-P.phi0   = 0;  % initial roll angle
-P.theta0 = 0;  % initial pitch angle
-P.psi0   = 0*pi/180;  % initial yaw angle
-P.p0     = 0;  % initial body frame roll rate
-P.q0     = 0;  % initial body frame pitch rate
-P.r0     = 0;  % initial body frame yaw rate
+P.Gamma1 = P.Jxz*(P.Jx - P.Jy + P.Jz)/P.Gamma;
+P.Gamma2 = (P.Jz*(P.Jz - P.Jy) + P.Jxz^2)/P.Gamma;
+P.Gamma3 = P.Jz/P.Gamma;
+P.Gamma4 = P.Jxz/P.Gamma;
+P.Gamma5 = (P.Jz - P.Jx)/P.Jy;
+P.Gamma6 = P.Jxz/P.Jy;
+P.Gamma7 = ((P.Jx - P.Jy)*P.Jx + P.Jxz^2)/P.Gamma;
+P.Gamma8 = P.Jx/P.Gamma;
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-P.gamma = P.Jx*P.Jz-P.Jxz^2;
-P.gamma_1 = (P.Jxz*(P.Jx-P.Jy+P.Jz))/P.gamma;
-P.gamma_2 = (P.Jz*(P.Jz-P.Jy)+P.Jxz^2)/P.gamma;
-P.gamma_3 = P.Jz/P.gamma;
-P.gamma_4 = P.Jxz/P.gamma;
-P.gamma_5 = (P.Jz-P.Jx)/P.Jy;
-P.gamma_6 = P.Jxz/P.Jy;
-P.gamma_7 = ((P.Jx-P.Jy)*P.Jx+P.Jxz^2)/P.gamma;
-P.gamma_8 = P.Jx/P.gamma;
+% More coefficients
+P.C_p_0 = P.Gamma3*P.C_ell_0 + P.Gamma4*P.C_n_0;
+P.C_p_beta = P.Gamma3*P.C_ell_beta + P.Gamma4*P.C_n_beta;
+P.C_p_p = P.Gamma3*P.C_ell_p + P.Gamma4*P.C_n_p;
+P.C_p_r = P.Gamma3*P.C_ell_r + P.Gamma4*P.C_n_r;
+P.C_p_delta_a = P.Gamma3*P.C_ell_delta_a + P.Gamma4*P.C_n_delta_a;
+P.C_p_delta_r = P.Gamma3*P.C_ell_delta_r + P.Gamma4*P.C_n_delta_r;
+P.C_r_0 = P.Gamma4*P.C_ell_0 + P.Gamma8*P.C_n_0;
+P.C_r_beta = P.Gamma4*P.C_ell_beta + P.Gamma8*P.C_n_beta;
+P.C_r_p = P.Gamma4*P.C_ell_p + P.Gamma8*P.C_n_p;
+P.C_r_r = P.Gamma4*P.C_ell_r + P.Gamma8*P.C_n_r;
+P.C_r_delta_a = P.Gamma4*P.C_ell_delta_a + P.Gamma8*P.C_n_delta_a;
+P.C_r_delta_r = P.Gamma4*P.C_ell_delta_r + P.Gamma8*P.C_n_delta_r;
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% wind
-P.wind_n = 0.00001;
-P.wind_e = 0.00001;
-P.wind_d = 0.00001;
+%%%%%%%%%%%%%%%%%%%%%%%%
+% Trim conditions
+%%%%%%%%%%%%%%%%%%%%%%%%
+P.Va0 = 35; % initial airspeed
+gamma = 0*pi/180; % initial flight path angle
+R = inf; % initial turn radiusP.Va0 = 17;
+
+P.pn0    =  -1000; % initial North position
+P.pe0    =  0; % initial East position
+P.pd0    =  0; % initial Down position (negative altitude)
+P.u0     =  P.Va0; % initial velocity along body x-axis
+P.v0     =  0; % initial velocity along body y-axis
+P.w0     =  0; % initial velocity along body z-axis
+P.phi0   =  0; % initial roll angle
+P.theta0 =  0; % initial pitch angle
+P.psi0   =  0; % initial yaw angle
+P.p0     =  0; % initial body frame roll rate
+P.q0     =  0; % initial body frame pitch rate
+P.r0     =  0; % initial body frame yaw rate
+
+% wind parameters
+P.wind_n = 0;%3;
+P.wind_e = 0;%2;
+P.wind_d = 0;
 P.L_u = 200;
 P.L_v = 200;
 P.L_w = 50;
-P.sigma_u = 1.06;
+P.sigma_u = 1.06; 
 P.sigma_v = 1.06;
-P.sigma_w = 0.7;
-%P.Va0 = 13;
+P.sigma_w = .7;
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% run trim commands
-[x_trim, u_trim]=compute_trim('mavsim_trim',P.Va,gamma,R);
+P.Ts = 0.01;
+P.Ts_gps = .1;
+P.Ts_gyros = .01;
+
+% compute trim
+[x_trim, u_trim] = compute_trim('mavsim_trim',P.Va0,gamma,R);
 P.u_trim = u_trim;
 P.x_trim = x_trim;
 
-% set initial conditions to trim conditions
-% initial conditions
-P.u0     = x_trim(4);  % initial velocity along body x-axis
-P.v0     = x_trim(5);  % initial velocity along body y-axis
-P.w0     = x_trim(6);  % initial velocity along body z-axis
-P.phi0   = x_trim(7);  % initial roll angle
-P.theta0 = x_trim(8);  % initial pitch angle
-P.p0     = x_trim(10);  % initial body frame roll rate
-P.q0     = x_trim(11);  % initial body frame pitch rate
-P.r0     = x_trim(12);  % initial body frame yaw rate
+% Set initial conditions to trim conditions
+P.pn0 = -1000;
+P.pe0 = 0;
+P.pd0 = -100;
+P.u0 = x_trim(4);
+P.v0 = x_trim(5);
+P.w0 = x_trim(6);
+P.phi0 = x_trim(7);
+P.theta0 = x_trim(8);
+P.psi0 = x_trim(9);
+P.p0 = x_trim(10);
+P.q0 = x_trim(11);
+P.r0 = x_trim(12);
 
+% Sensor Bias
+P.bias_gyro_x = 0;
+P.bias_gyro_y = 0;
+P.bias_gyro_z = 0;
+
+% LPF Gain Values
+P.alpha_static_pres = .50;
+P.alpha_diff_pres = .20;
+P.alpha_gyro_x = .25;
+P.alpha_gyro_y = .25;
+P.alpha_gyro_z = .25;
+
+% Get linear transfer function models
 % compute different transfer functions
 [T_phi_delta_a,T_chi_phi,T_theta_delta_e,T_h_theta,T_h_Va,T_Va_delta_t,T_Va_theta,T_v_delta_r]...
-   = compute_tf_model(x_trim,u_trim,P);
+    = compute_tf_model(x_trim,u_trim,P);
 
-% linearize the equations of motion around trim conditions
-[A_lon, B_lon, A_lat, B_lat] = compute_ss_model('mavsim_trim',x_trim,u_trim);
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%% Autopilot Gains
-P.tau = 5;  % gain on dirty derivative
-P.altitude_take_off_zone = 10;
-P.altitude_hold_zone = 10;
-P.take_off_throttle = 1;
-P.climbzone_throttle = 1;
-P.descent_trottle = 0; %0.61;
-P.altitudehold_throttle =0.61; %u_trim(4) ;% +  airspeed from throttle control;
-P.theta_c_max = 30*pi/180; % maximum pitch angle command
-P.phi_max = 45*pi/180;
-
-%%% Roll Attitude Hold
-   % inputs :-
-      [num,den] = tfdata(T_phi_delta_a, 'v');
-      a_phi1 = den(2);     % transfer function coefficient
-      a_phi2 = num(3);     % transfer function coefficient
-      % P.Va      % nominal airspeed
-      delta_a_max = 45*pi/180;   % aileron limit   % max possible aileron command
-   % tuning parameters :-
-      e_phi_max = 10*pi/180;    % saturaton limit  % maxmimum anticipated roll error
-      zeta_phi = 0.8;   % zeta_roll    % damping coefficient
-      P.ki_phi = 0;   % P.roll_ki    % integrator gain
-   % computing the natural frequency :-
-      wn_phi   = sqrt(abs(a_phi2)*delta_a_max/e_phi_max);   % natural frequency of the inner loop
-   % computing gains :-
-      P.kd_phi = 0.1584;%(2*zeta_phi*wn_phi/a_phi2);
-      P.kp_phi = 0.47;%sign(a_phi2)*delta_a_max/e_phi_max;
-      P.kd_phi = P.kd_phi - 0.2*(P.kd_phi); % 20% decreading
-      
-%%% Course Hold
-   % inputs :-
-      %%%%
-   % tuning parameters :-
-      zeta_chi = 0.8;
-      WChi     = 8;   % bandwidth separation
-   % computing the natural frequincy :-
-      wn_chi   = wn_phi/WChi ;   % natural frequency of the outer loop
-   % computing gains :-
-      P.kp_chi = 1.25;%2*zeta_chi*wn_chi*P.Va/P.gravity;
-      P.ki_chi = 0.2;%(wn_chi^2)*P.Va/P.gravity;
-      P.kd_chi =  0;
-
-%%% Slideslip Hold
-   % inputs :-
-      [num,den]=tfdata(T_v_delta_r,'v');
-      a_beta2 = num(2);
-      a_beta1 = den(2);
-      delta_r_max = 45*pi/180;   % rudder limit
-   % tuning parameters :-
-      e_beta_max = 10*pi/180;    % saturaton limit
-      zeta_beta = 0.8;
-   % computing the natural frequency :-
-      %%%%
-   % computing gains :-
-      P.kp_beta = 0;%sign(a_beta2)*delta_r_max/e_beta_max;
-      P.ki_beta = 0;%(1/a_beta2)*((a_beta1+(a_beta2*P.kp_beta)/2*zeta_beta)^2);
-      P.kd_beta = 0;
-
-%%% Pitch Attitide Hold
-   % inputs :-
-      [num,den]=tfdata(T_theta_delta_e,'v');
-      a_theta1 = num(2);
-      a_theta2 = den(3);
-      a_theta3 = num(3);
-      delta_e_max = 45*pi/180;   % elevator limit
-   % tuning parameters :-
-      e_theta_max = 10*pi/180;    % saturaton limit
-      zeta_theta = 0.707;
-   % computing the natural frequency :-
-      wn_theta = sqrt(a_theta2 + (sign(a_theta3*delta_e_max/e_theta_max)));
-   % computing gains :-
-      P.kd_theta = -0.7;%(2*zeta_theta*wn_theta - a_theta1)/a_theta3;% -25;
-      P.kp_theta = -4.5;%sign(a_theta3)*delta_e_max/e_theta_max;% -250;
-      P.ki_theta = 0;
-      P.k_theta_DC = P.kp_theta*a_theta3/(a_theta2 + P.kd_theta*a_theta3);  % DC Gain
-      
-%%% Altitude Hold using Commanded Pitch
-   % inputs :-
-      %%%%
-   % tuning parameters :-
-      zeta_h = 1;
-      Wh     = 2;   % bandwidth separation
-   % computing the natural frequency :-
-      wn_h = wn_theta/Wh;
-   % computing gains :-
-      P.kp_h = 0.05;%2*zeta_h*wn_h / P.k_theta_DC*P.Va;
-      P.ki_h = 0.011;%(wn_h^2)/P.k_theta_DC*P.Va;
-      P.kd_h = 0;
-
-
-%%% Airspeed Hold using Commanded Pitch      (v2 ==> airspeed hold using pitch)
-   % inputs :-
-      [num,den]=tfdata(T_Va_theta,'v');
-      a_V1 = den(2);
-   % tuning parameters :-
-      zeta_v2 = 1;
-      Wv2     = 10;    % bandwidth saperation
-   % computing the natural frequency :-
-      wn_v2 = wn_theta/Wv2;
-   % computing gains :-
-      P.kp_v2 = -0.008;%(a_V1 - 2*zeta_v2*wn_v2)/(P.k_theta_DC*P.gravity);
-      P.ki_v2 = -0.0019;%-(wn_v2^2)/(P.k_theta_DC*P.gravity);
-      P.kd_v2 = 0;
-
-%%% Airspeed Hold using Throttle      (v ==> airspeed hold using throttle)
-   % inputs :-
-      [num,den]=tfdata(T_Va_delta_t,'v');
-      a_V1 = den(2);
-      a_V2 = num(2);
-   % tuning parameters :-
-      zeta_v = 1.3;
-   % computing the natural frequency :-
-      wn_v = 0.7;
-   % computing gains :-
-      P.kp_v = 1.25;%(wn_v^2)/a_V1;
-      P.ki_v = 0.35;%(2*zeta_v*wn_v - a_V1)/a_V2;
-      P.kd_v = 0;
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%% sensor parameters
-% simulate rate gyros (units are rad/sec)
-P.sigma_gyro = 0.13*pi/180;  % standard deviation of gyros in rad/sec
-
-% simulate accelerometers (units of g)
-P.sigma_accel = 0.0025; % standard deviation of accelerometers in m/s^2
-
-% simulate pressure sensors
-P.sigma_abs_pres = 0.01e3; % Pa   % sensor noise
-P.beta_abs_pres = .125e3; % Pa    % temprature related bias drift
-P.sigma_diff_pres = 0.002e3; % Pa % sensor noise
-P.beta_diff_pres = 0.02e3; % Pa   % temprature related bias drift
-
-%%% GPS parameters
-P.Ts_gps = 1;
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+run('compute_gains.m')
+% 
+% % linearize the equations of motion around trim conditions
+%[A_lon, B_lon, A_lat, B_lat] = compute_ss_model('mavsim_trim',x_trim,u_trim);
 

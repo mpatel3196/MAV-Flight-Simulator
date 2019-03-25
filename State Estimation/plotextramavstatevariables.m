@@ -61,9 +61,9 @@ function plotextramavstatevariables(uu,P)
 %    delta_t     = uu(53);            % throttle setting (unitless)
     t           = uu(54);            % simulation time
     
-    bx = P.sigma_gyro;%P.bias_gyro_x;             % x-gyro bias
-    by = P.sigma_gyro;%P.bias_gyro_y;             % y-gyro bias
-    bz = P.sigma_gyro;%P.bias_gyro_z;             % z-gyro bias
+    bx = P.bias_gyro_x;             % x-gyro bias
+    by = P.bias_gyro_y;             % y-gyro bias
+    bz = P.bias_gyro_z;             % z-gyro bias
 
     
     % compute true ground speed Vg
