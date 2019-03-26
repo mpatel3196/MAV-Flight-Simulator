@@ -26,10 +26,6 @@ function xhat = true_states(uu,P)
 %   bzhat    - estimate of z-gyro bias
 % 
 % 
-% Modification History:
-%   2/11/2010 - RWB
-%   5/14/2010 - RWB
-%   
 
     % process inputs
     NN = 0;

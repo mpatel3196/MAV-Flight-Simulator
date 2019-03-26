@@ -1,9 +1,6 @@
 % gps.m
 %   Compute the output of gps sensor
 %
-%  Revised:
-%   3/5/2010 - RB 
-%   5/14/2010 - RB
 
 function y = gps(uu, P)
 

@@ -30,8 +30,8 @@ WX = 37;
 
 wn_chi = wn_phi/WX; % bandwidth separation
 
-% P.kp_chi = 1.53; %2*zeta_chi*wn_chi*Vg/P.g;
-% P.ki_chi = 0.6885; %wn_chi^2*Vg/P.g;
+% P.kp_chi = 1.53; %2*zeta_chi*wn_chi*Vg/P.gravity;
+% P.ki_chi = 0.6885; %wn_chi^2*Vg/P.gravity;
 
 P.kp_chi = 1.2;
 P.ki_chi = 0.041;
@@ -105,10 +105,10 @@ alpha_trim = atan(x_trim(6)/x_trim(4));
 a_V1 = P.rho*Va*P.S_wing/P.mass*(P.C_D_0 + P.C_D_alpha*alpha_trim + ...
     P.C_D_delta_e*delta_e_trim) + P.rho*P.S_prop*P.C_prop*Va/P.mass;
 a_V2 = P.rho*P.S_prop*P.C_prop*P.k_motor^2*delta_t_trim/P.mass;
-a_V3 = P.g*cos(x_trim(8) - x_trim(9));
+a_V3 = P.gravity*cos(x_trim(8) - x_trim(9));
 
-P.ki_V2 = -wn_V2^2/(P.K_theta_DC*P.g);
-P.kp_V2 = (a_V1 - 2*zeta_V2*wn_V2)/(P.K_theta_DC*P.g);
+P.ki_V2 = -wn_V2^2/(P.K_theta_DC*P.gravity);
+P.kp_V2 = (a_V1 - 2*zeta_V2*wn_V2)/(P.K_theta_DC*P.gravity);
 
 %% Airspeed Hold with Throttle
 

@@ -241,22 +241,18 @@ m = uu(5);
 n = uu(6);
 
 % Equations of Motion
-%* Checked
 pn_dot = cos(theta)*cos(psi)*u + (sin(phi)*sin(theta)*cos(psi) - cos(phi)*sin(psi))*v + (cos(phi)*sin(theta)*cos(psi) + sin(phi)*sin(psi))*w;
 pe_dot = cos(theta)*sin(psi)*u + (sin(phi)*sin(theta)*sin(psi) + cos(phi)*cos(psi))*v + (cos(phi)*sin(theta)*sin(psi) - sin(phi)*cos(psi))*w;
 pd_dot = -sin(theta)*u + sin(phi)*cos(theta)*v + cos(phi)*cos(theta)*w;
 
-%* Checked
 u_dot = r*v - q*w + fX/P.mass;
 v_dot = p*w - r*u + fY/P.mass;
 w_dot = q*u - p*v + fZ/P.mass;
 
-%* Checked
 phi_dot = p + sin(phi)*tan(theta)*q + cos(phi)*tan(theta)*r;
 theta_dot = cos(phi)*q - sin(phi)*r;
 psi_dot = sin(phi)*q/cos(theta) + cos(phi)*r/cos(theta);
 
-%* Checked
 p_dot = P.Gamma1*p*q - P.Gamma2*q*r + P.Gamma3*ell + P.Gamma4*n;
 q_dot = P.Gamma5*p*r - P.Gamma6*(p^2 - r^2) + m/P.Jy;
 r_dot = P.Gamma7*p*q - P.Gamma1*q*r + P.Gamma4*ell + P.Gamma8*n;

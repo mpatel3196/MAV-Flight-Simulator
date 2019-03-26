@@ -1,12 +1,12 @@
 function out = forces_moments(x, delta, wind, P)
 
-% Output
-% F - forces
-% M - moments
-% Va - airspeed
-% alpha - angle of attack
-% beta - sideslip
-% wind - wind vector in inertial frame
+% Output :-
+%       F - forces
+%       M - moments
+%       Va - airspeed
+%       alpha - angle of attack
+%       beta - sideslip
+%       wind - wind vector in inertial frame
 
 % Organize inputs
 % states
@@ -59,7 +59,7 @@ beta = asin(v_r/sqrt(u_r^2 + v_r^2 + w_r^2));
 
 
 if (Va == 0)
-    Va = P.Va0;
+    Va = P.Va;
 end
 if ~isfinite(alpha)
     alpha = 0;
@@ -78,27 +78,26 @@ w_d = -sin(theta)*u_w + sin(phi)*cos(theta)*v_w + cos(phi)*cos(theta)*w_w;
 % Coefficients
 sigma = (1 + exp(-P.M*(alpha-P.alpha0)) + exp(P.M*(alpha+P.alpha0)))/...
     ((1 + exp(-P.M*(alpha-P.alpha0)))*(1 + exp(P.M*(alpha+P.alpha0))));
-
 C_L_alpha = (1-sigma)*(P.C_L_0 + P.C_L_alpha*alpha) + sigma*(2*sign(alpha)*...
     sin(alpha)^2*cos(alpha));
 C_D_alpha = P.C_D_p + (P.C_L_0 + P.C_L_alpha*alpha)^2/(pi*P.e*P.AR);
 
-C_chi_alpha = -C_D_alpha*cos(alpha) + C_L_alpha*sin(alpha);
-C_chi_q_alpha = -P.C_D_q*cos(alpha) + P.C_L_q*sin(alpha);
-C_chi_delta_e_alpha = -P.C_D_delta_e*cos(alpha) + P.C_L_delta_e*sin(alpha);
-
+C_X_alpha = -C_D_alpha*cos(alpha) + C_L_alpha*sin(alpha);
+C_X_q_alpha = -P.C_D_q*cos(alpha) + P.C_L_q*sin(alpha);
+C_X_delta_e_alpha = -P.C_D_delta_e*cos(alpha) + P.C_L_delta_e*sin(alpha);
 C_Z_alpha = -C_D_alpha*sin(alpha) - C_L_alpha*cos(alpha);
 C_Z_q_alpha = -P.C_D_q*sin(alpha) - P.C_L_q*cos(alpha);
 C_Z_delta_e_alpha = -P.C_D_delta_e*sin(alpha) - P.C_L_delta_e*cos(alpha);
 
-% Forces
-fx = -P.mass*P.g*sin(theta) + 1/2*P.rho*Va^2*P.S_wing*(C_chi_alpha + ...
-    C_chi_q_alpha*P.c*q/(2*Va) + C_chi_delta_e_alpha*delta_e) + ...
+  % compute external forces and torques on aircraft
+  % Forces
+fx = -P.mass*P.gravity*sin(theta) + 1/2*P.rho*Va^2*P.S_wing*(C_X_alpha + ...
+    C_X_q_alpha*P.c*q/(2*Va) + C_X_delta_e_alpha*delta_e) + ...
     1/2*P.rho*P.S_prop*P.C_prop*((P.k_motor*delta_t)^2 - Va^2);
-fy = P.mass*P.g*cos(theta)*sin(phi) + 1/2*P.rho*Va^2*P.S_wing*(P.C_Y_0 + ...
+fy = P.mass*P.gravity*cos(theta)*sin(phi) + 1/2*P.rho*Va^2*P.S_wing*(P.C_Y_0 + ...
     P.C_Y_beta*beta + P.C_Y_p*P.b*p/(2*Va) + P.C_Y_r*P.b*r/(2*Va) + ...
     P.C_Y_delta_a*delta_a + P.C_Y_delta_r*delta_r);
-fz = P.mass*P.g*cos(theta)*cos(phi) + 1/2*P.rho*Va^2*P.S_wing*(C_Z_alpha +...
+fz = P.mass*P.gravity*cos(theta)*cos(phi) + 1/2*P.rho*Va^2*P.S_wing*(C_Z_alpha +...
     C_Z_q_alpha*P.c*q/(2*Va) + C_Z_delta_e_alpha*delta_e);
 
 % Torques

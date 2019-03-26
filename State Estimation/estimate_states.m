@@ -1,3 +1,26 @@
+% estimate_states
+%   - estimate the MAV states using gyros, accels, pressure sensors, and
+%   GPS.
+%
+% Outputs are:
+%   pnhat    - estimated North position, 
+%   pehat    - estimated East position, 
+%   hhat     - estimated altitude, 
+%   Vahat    - estimated airspeed, 
+%   alphahat - estimated angle of attack
+%   betahat  - estimated sideslip angle
+%   phihat   - estimated roll angle, 
+%   thetahat - estimated pitch angel, 
+%   chihat   - estimated course, 
+%   phat     - estimated roll rate, 
+%   qhat     - estimated pitch rate, 
+%   rhat     - estimated yaw rate,
+%   Vghat    - estimated ground speed, 
+%   wnhat    - estimate of North wind, 
+%   wehat    - estimate of East wind
+%   psihat   - estimate of heading angle
+
+
 function xhat = estimate_states(uu,P)
 
     % rename inputs
@@ -32,7 +55,7 @@ function xhat = estimate_states(uu,P)
     lpf_static_pres = LPF(y_static_pres_d1,y_static_pres,P.alpha_static_pres);
     lpf_diff_pres = LPF(y_diff_pres_d1,y_diff_pres,P.alpha_diff_pres);
 
-    hhat = lpf_static_pres/(P.rho*P.g);
+    hhat = lpf_static_pres/(P.rho*P.gravity);
     Vahat = sqrt(2*lpf_diff_pres/P.rho);
     phat = y_gyro_x;
     qhat = y_gyro_y;
@@ -70,10 +93,10 @@ function xhat = estimate_states(uu,P)
             
     % Measurement Correction
     if ~mod(t,P.Ts_gyros)
-        C_att = dh_dx_att(xhat_att,u_att,P.g);
+        C_att = dh_dx_att(xhat_att,u_att,P.gravity);
         L_att = P_att*C_att'*inv(R_att + C_att*P_att*C_att');
         P_att = (eye(2) - L_att*C_att)*P_att;
-        xhat_att = xhat_att + L_att*(y_att - h_att(xhat_att,u_att,P.g));
+        xhat_att = xhat_att + L_att*(y_att - h_att(xhat_att,u_att,P.gravity));
     end
     
     %----------------------------------------------------------------------
@@ -86,7 +109,7 @@ function xhat = estimate_states(uu,P)
     persistent Q_gps;
     
     if t == 0
-        xhat_gps = [P.pn0; P.pe0; P.Va0; P.psi0; 0; 0; P.psi0];
+        xhat_gps = [P.pn0; P.pe0; P.Va; P.psi0; 0; 0; P.psi0];
         P_gps = diag([.01, .01, .01, .01, .01, .01, .01]);
         Q_gps = diag([.001, .001, .01, 0.01, .01, .01, .01]);
         R_gps = diag([5^2, 5^2, 2^2, (.45)^2, 20^2, 20^2]);
@@ -104,8 +127,8 @@ function xhat = estimate_states(uu,P)
     % Prediction Steps
     N = 10;
     for i = 1:N
-        xhat_gps = xhat_gps + P.Ts/N*f_gps(xhat_gps,u_gps,P.g);
-        A_gps = df_dx_gps(xhat_gps,u_gps,P.g);
+        xhat_gps = xhat_gps + P.Ts/N*f_gps(xhat_gps,u_gps,P.gravity);
+        A_gps = df_dx_gps(xhat_gps,u_gps,P.gravity);
         P_gps = P_gps + P.Ts/N*(A_gps*P_gps + P_gps*A_gps' + Q_gps);
     end
     

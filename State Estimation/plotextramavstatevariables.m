@@ -1,8 +1,5 @@
 function plotextramavstatevariables(uu,P)
 %
-% modified 12/11/2009 - RB
-%           5/17/2010 - RB
-%
 %  plot groundspeed Vg, heading psi, wind North wn, and wind East we
 
     % process inputs to function

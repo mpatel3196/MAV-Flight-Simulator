@@ -1,9 +1,6 @@
 % sensors.m
 %   Compute the output of rate gyros, accelerometers, and pressure sensors
 %
-%  Revised:
-%   3/5/2010  - RB 
-%   5/14/2010 - RB
 
 function y = sensors(uu, P)
 
@@ -41,9 +38,9 @@ function y = sensors(uu, P)
 
     % simulate accelerometers (units of g)
     sigma_accel = 0.0025; % g
-    y_accel_x = F_x/P.mass + P.g*sin(theta) + sigma_accel*randn(1);
-    y_accel_y = F_y/P.mass - P.g*cos(theta)*sin(phi) + sigma_accel*randn(1);
-    y_accel_z = F_z/P.mass - P.g*cos(theta)*cos(phi) + sigma_accel*randn(1);
+    y_accel_x = F_x/P.mass + P.gravity*sin(theta) + sigma_accel*randn(1);
+    y_accel_y = F_y/P.mass - P.gravity*cos(theta)*sin(phi) + sigma_accel*randn(1);
+    y_accel_z = F_z/P.mass - P.gravity*cos(theta)*cos(phi) + sigma_accel*randn(1);
 
     % simulate pressure sensors
     sigma_abs_pres = 0.01e3; % Pa
@@ -51,7 +48,7 @@ function y = sensors(uu, P)
     sigma_diff_pres = 0.002e3; % Pa
     beta_diff_pres = 0.02e3; % Pa
     
-    y_static_pres = P.rho*P.g*-pd + beta_abs_pres + sigma_abs_pres*randn(1);
+    y_static_pres = P.rho*P.gravity*-pd + beta_abs_pres + sigma_abs_pres*randn(1);
     y_diff_pres = P.rho*Va^2/2 + beta_diff_pres + sigma_diff_pres*randn(1);
 
     % construct total output

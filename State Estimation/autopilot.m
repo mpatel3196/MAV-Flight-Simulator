@@ -2,11 +2,6 @@ function y = autopilot(uu,P)
 %
 % autopilot for mavsim
 % 
-% Modification History:
-%   2/11/2010 - RWB
-%   5/14/2010 - RWB
-%   9/30/2014 - RWB
-%   
 
     % process inputs
     NN = 0;

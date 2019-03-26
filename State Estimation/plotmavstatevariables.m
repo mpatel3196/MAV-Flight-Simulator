@@ -1,6 +1,5 @@
 function plotMAVStateVariables(uu)
 %
-% modified 12/11/2009 - RB
 
     % process inputs to function
     pn          = uu(1);             % North position (meters)
